@@ -1,7 +1,7 @@
 import express, { type Express } from "express";
 import http from "node:http";
 import https from "node:https";
-
+import cors from "cors";
 import type { IConfig } from "./config/index.ts";
 import defaultConfig from "./config/index.ts";
 import type { PeerServerEvents } from "./instance.ts";
@@ -29,6 +29,11 @@ function ExpressPeerServer(
 			newOptions.proxied === "false" ? false : !!newOptions.proxied,
 		);
 	}
+
+	app.use(cors({
+		origin: true,
+		credentials: true
+	}));
 
 	app.on("mount", () => {
 		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
