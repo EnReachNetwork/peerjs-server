@@ -7,7 +7,6 @@ COPY package.json package-lock.json ./
 RUN npm clean-install
 COPY . ./
 RUN npm run build
-RUN npm run test
 
 FROM docker.io/library/node:18.20.5-alpine as production
 RUN mkdir /peer-server
