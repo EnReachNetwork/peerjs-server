@@ -28,7 +28,19 @@ jobs:
       - run: npm run build
       - run: npm run lint
       - run: npm run coverage
-      - name: Publish code coverage to CodeClimate
-        uses: paambaati/codeclimate-action@v5.0.0
-        env:
-          CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            enreach/peerjs-server:${{ steps.extract_branch.outputs.branch }}-latest
+            enreach/peerjs-server:${{ steps.extract_branch.outputs.branch }}-${{ env.date }}
