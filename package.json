@@ -68,7 +68,7 @@
 		"check": "tsc --noEmit",
 		"test": "npm run lint && jest",
 		"coverage": "jest --coverage",
-		"start": "node dist/bin/peerjs.js --port ${PORT:=9000}",
+		"start": "parcel build && node dist/bin/peerjs.js --port ${PORT:=9000}",
 		"dev": "nodemon --watch src -e ts --exec 'npm run build && npm run start'",
 		"semantic-release": "semantic-release"
 	},
@@ -76,7 +76,9 @@
 		"@types/express": "^4.17.3",
 		"@types/ws": "^7.2.3 || ^8.0.0",
 		"cors": "^2.8.5",
+		"dotenv": "^16.4.7",
 		"express": "^4.17.1",
+		"ioredis": "^5.4.2",
 		"node-fetch": "^3.3.0",
 		"ws": "^7.2.3 || ^8.0.0",
 		"yargs": "^17.6.2"

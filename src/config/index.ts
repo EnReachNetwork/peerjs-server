@@ -1,6 +1,7 @@
 import type { WebSocketServer, ServerOptions } from "ws";
 import type { CorsOptions } from "cors";
-
+import * as dotenv from 'dotenv';
+dotenv.config();
 export interface IConfig {
 	readonly host: string;
 	readonly port: number;
@@ -34,5 +35,30 @@ const defaultConfig: IConfig = {
 	cleanup_out_msgs: 1000,
 	corsOptions: { origin: true },
 };
+
+const getEnvOrExit = (key: string, defaultValue: string = "", exit: boolean = true): string => {
+	const value = process.env[key];
+	const result = value || defaultValue;
+	if ((!result || result === "") && exit) {
+		console.error(`Required env var '${key}' missing`);
+		process.exit(1);
+	}
+	return result;
+}
+
+export const CONFIGS = {
+	common: {
+		concurrent_test: getEnvOrExit("CONCURRENT_TEST", "true"),
+	},
+	redis: {
+		useCluster: getEnvOrExit('REDIS_CLUSTER', 'false'),
+		clusterNodes: getEnvOrExit('REDIS_CLUSTER_NODES', '[{"host":"127.0.0.1","port":6379}]'),
+		host: getEnvOrExit('REDIS_HOST', 'localhost'),
+		port: Number(getEnvOrExit('REDIS_PORT', '6379')),
+		password: getEnvOrExit("REDIS_PASSWORD", "", false),
+		user: getEnvOrExit("REDIS_USER", "", false),
+		tls: getEnvOrExit("REDIS_TLS", "false", false),
+	}
+}
 
 export default defaultConfig;
