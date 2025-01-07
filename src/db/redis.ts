@@ -1,5 +1,9 @@
 import Redis, { Cluster } from "ioredis";
 import { CONFIGS } from "../config/index.ts";
+import { IRealm } from "../models/realm.ts";
+import { MessageHandler } from "../messageHandler/index.ts";
+import { IMessage } from "../models/message.ts";
+import { MessageType } from "../enums.ts";
 
 const createRedis = (): Redis.Redis | Cluster => {
     if (CONFIGS.redis.useCluster === 'true') {
@@ -67,6 +71,7 @@ const REDIS = {
     NODE_TAP_SORTED_SET: 'NODE::TAP::SORTED::SET',
     TAP_PEERS_SET: 'TAP::PEERS::SET',
     TAP_QUERY_FROM: 'TAP::QUERY::FROM',
+    TAP_CHANNEL_MSG: 'TAP::CHANNEL::MSG',
 }
 
 const parseId = (id: string | null): number | null => {
@@ -96,12 +101,46 @@ const getNodeTapCache = async (nodeId: number) => {
     return redis.get(`${REDIS.NODE_TAP_CACHE}::${nodeId}`);
 }
 
-const redis = createRedis();
+const publishMessage = async (message: string, channel: string = REDIS.TAP_CHANNEL_MSG) => {
+    return redis.publish(channel, message);
+}
+
+const subscribeMessage = async (realm: IRealm, handler: MessageHandler, channel: string = REDIS.TAP_CHANNEL_MSG) => {
+    const subRedis = redis.duplicate();
+    await subRedis.subscribe(channel);
+    subRedis.on("message", (_channel, data) => {
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        console.log(`Received data: ${data.toString()}`);
+        const message = JSON.parse(data.toString()) as Writable<IMessage>;
+        if (message.dst) {
+            const client = realm.getClientById(message.dst);
+            if (client) {
+                console.log(`dst: ${message.dst} client: ${client.getId()}`);
+                handler.handle(client, message);
+            }
+        } else {
+            if (message.src && message.type === MessageType.LEAVE) {
+                const client = realm.getClientById(message.src);
+                if (client) {
+                    handler.handle(client, message);
+                }
+            }
+        }
+    });
+}
+
+type Writable<T> = {
+    -readonly [K in keyof T]: T[K];
+};
+
+export const redis = createRedis();
 
 export const cache = {
     getUserIdByUUID,
     getCacheUserNodeId,
     getNodeTapCache,
     getTapNodeList,
-    addTapPeersSet
+    addTapPeersSet,
+    publishMessage,
+    subscribeMessage
 }

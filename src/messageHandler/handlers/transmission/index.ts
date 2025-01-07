@@ -44,13 +44,7 @@ export const TransmissionHandler = ({
 				});
 			}
 		} else {
-			// Wait for this client to connect/reconnect (XHR) for important
-			// messages.
-			const ignoredTypes = [MessageType.LEAVE, MessageType.EXPIRE];
-
-			if (!ignoredTypes.includes(type) && dstId) {
-				realm.addMessageToQueue(dstId, message);
-			} else if (type === MessageType.LEAVE && !dstId) {
+			if (type === MessageType.LEAVE && !dstId) {
 				realm.removeClientById(srcId);
 			} else {
 				// Unavailable destination specified with message LEAVE or EXPIRE

@@ -275,9 +275,7 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 			try {
 				// eslint-disable-next-line @typescript-eslint/no-base-to-string
 				const message = JSON.parse(data.toString()) as Writable<IMessage>;
-
 				message.src = client.getId();
-
 				this.emit("message", client, message);
 			} catch (e) {
 				this.emit("error", e);

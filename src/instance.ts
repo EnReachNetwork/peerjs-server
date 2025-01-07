@@ -14,6 +14,8 @@ import { Api } from "./api/index.ts";
 import type { IClient } from "./models/client.ts";
 import type { IMessage } from "./models/message.ts";
 import type { IConfig } from "./config/index.ts";
+import { cache } from "./db/redis.ts";
+import { MessageType } from "./enums.ts";
 
 export interface PeerServerEvents {
 	on(event: "connection", listener: (client: IClient) => void): this;
@@ -82,9 +84,14 @@ export const createInstance = ({
 		app.emit("connection", client);
 	});
 
-	wss.on("message", (client: IClient, message: IMessage) => {
-		app.emit("message", client, message);
-		messageHandler.handle(client, message);
+	wss.on("message", async (client: IClient, message: IMessage) => {
+		if (message.type === MessageType.HEARTBEAT) {
+			// 心跳消息本地处理
+			messageHandler.handle(client, message);
+		} else {
+			// 除心跳消息外，其余发布到 Redis
+			await cache.publishMessage(JSON.stringify(message));
+		}
 	});
 
 	wss.on("close", (client: IClient) => {
@@ -97,4 +104,5 @@ export const createInstance = ({
 
 	messagesExpire.startMessagesExpiration();
 	checkBrokenConnections.start();
+	cache.subscribeMessage(realm, messageHandler);
 };
