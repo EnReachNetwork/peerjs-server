@@ -143,7 +143,6 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 			return;
 		}
 
-		let tapUUID = null;
 		let nodeId = null;
 		let startNode = false;
 		try {
@@ -190,8 +189,6 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 					return;
 				}
 			}
-
-			tapUUID = uuid;
 		} catch (error) {
 			this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
 			return;
@@ -213,13 +210,13 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 				return;
 			}
 			if (!startNode) {
-				await cache.addTapPeersSet(tapUUID, nodeId, id);
+				await cache.setNodePeerId(nodeId, id);
 			}
 			this._configureWS(socket, client);
 			return;
 		}
 
-		await this._registerClient({ socket, id, token, nodeId, tapUUID, startNode });
+		await this._registerClient({ socket, id, token, nodeId, startNode });
 	}
 
 	private _onSocketError(error: Error): void {
@@ -232,14 +229,12 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 		id,
 		token,
 		nodeId,
-		tapUUID,
 		startNode
 	}: {
 		socket: WebSocket;
 		id: string;
 		token: string;
 		nodeId: number;
-		tapUUID: string;
 		startNode: boolean
 	}): Promise<void> {
 		// Check concurrent limit
@@ -250,11 +245,11 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 			return;
 		}
 
-		const newClient: IClient = new Client({ id, token });
+		const newClient: IClient = new Client({ id, token, nodeId });
 		this.realm.setClient(newClient, id);
 		socket.send(JSON.stringify({ type: MessageType.OPEN }));
 		if (!startNode) {
-			await cache.addTapPeersSet(tapUUID, nodeId, id);
+			await cache.setNodePeerId(nodeId, id);
 		}
 		this._configureWS(socket, newClient);
 	}
@@ -263,9 +258,10 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 		client.setSocket(socket);
 
 		// Cleanup after a socket closes.
-		socket.on("close", () => {
+		socket.on("close", async () => {
 			if (client.getSocket() === socket) {
 				this.realm.removeClientById(client.getId());
+				await cache.deleteNodePeerId(client.getNodeId());
 				this.emit("close", client);
 			}
 		});

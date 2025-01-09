@@ -3,6 +3,8 @@ import type WebSocket from "ws";
 export interface IClient {
 	getId(): string;
 
+	getNodeId(): number;
+
 	getToken(): string;
 
 	getSocket(): WebSocket | null;
@@ -19,12 +21,18 @@ export interface IClient {
 export class Client implements IClient {
 	private readonly id: string;
 	private readonly token: string;
+	private readonly nodeId: number;
 	private socket: WebSocket | null = null;
 	private lastPing: number = new Date().getTime();
 
-	constructor({ id, token }: { id: string; token: string }) {
+	constructor({ id, token, nodeId }: { id: string; token: string, nodeId: number }) {
 		this.id = id;
 		this.token = token;
+		this.nodeId = nodeId
+	}
+
+	public getNodeId(): number {
+		return this.nodeId;
 	}
 
 	public getId(): string {

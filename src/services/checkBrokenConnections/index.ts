@@ -1,4 +1,5 @@
 import type { IConfig } from "../../config/index.ts";
+import { cache } from "../../db/redis.ts";
 import type { IClient } from "../../models/client.ts";
 import type { IRealm } from "../../models/realm.ts";
 
@@ -35,8 +36,8 @@ export class CheckBrokenConnections {
 			clearTimeout(this.timeoutId);
 		}
 
-		this.timeoutId = setTimeout(() => {
-			this.checkConnections();
+		this.timeoutId = setTimeout(async () => {
+			await this.checkConnections();
 
 			this.timeoutId = null;
 
@@ -51,7 +52,7 @@ export class CheckBrokenConnections {
 		}
 	}
 
-	private checkConnections(): void {
+	private async checkConnections(): Promise<void> {
 		const clientsIds = this.realm.getClientsIds();
 
 		const now = new Date().getTime();
@@ -71,7 +72,7 @@ export class CheckBrokenConnections {
 			} finally {
 				this.realm.clearMessageQueue(clientId);
 				this.realm.removeClientById(clientId);
-
+				await cache.deleteNodePeerId(client.getNodeId());
 				client.setSocket(null);
 
 				this.onClose?.(client);

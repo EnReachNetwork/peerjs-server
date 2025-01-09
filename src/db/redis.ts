@@ -67,6 +67,7 @@ const REDIS = {
     USER_ACTIVE_CODE: 'USER::ACTIVE::CODE',
     USER_RESET_CODE: 'USER::RESET::CODE',
     NODE_TAP_CACHE: 'NODE::TAP::CACHE',
+    NODE_PEER_ID: 'NODE::PEER::ID',
     TAP_NODE_LIST_CACHE: 'TAP::NODE::LIST::CACHE',
     NODE_TAP_SORTED_SET: 'NODE::TAP::SORTED::SET',
     TAP_PEERS_SET: 'TAP::PEERS::SET',
@@ -95,6 +96,14 @@ const getTapNodeList = async (uuid: string) => {
 
 const addTapPeersSet = async (uuid: string, nodeId: number, peerId: string) => {
     return redis.hset(`${REDIS.TAP_PEERS_SET}::${uuid}`, nodeId, peerId);
+}
+
+const setNodePeerId = async (nodeId: number, peerId: string) => {
+    return redis.set(`${REDIS.NODE_PEER_ID}::${nodeId}`, peerId);
+}
+
+const deleteNodePeerId = async (nodeId: number) => {
+    return redis.del(`${REDIS.NODE_PEER_ID}::${nodeId}`);
 }
 
 const getNodeTapCache = async (nodeId: number) => {
@@ -136,6 +145,8 @@ type Writable<T> = {
 export const redis = createRedis();
 
 export const cache = {
+    setNodePeerId,
+    deleteNodePeerId,
     getUserIdByUUID,
     getCacheUserNodeId,
     getNodeTapCache,
