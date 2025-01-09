@@ -102,6 +102,10 @@ const setNodePeerId = async (nodeId: number, peerId: string) => {
     return redis.set(`${REDIS.NODE_PEER_ID}::${nodeId}`, peerId);
 }
 
+const getNodePeerId = async (nodeId: number) => {
+    return redis.get(`${REDIS.NODE_PEER_ID}::${nodeId}`);
+}
+
 const deleteNodePeerId = async (nodeId: number) => {
     return redis.del(`${REDIS.NODE_PEER_ID}::${nodeId}`);
 }
@@ -145,6 +149,7 @@ type Writable<T> = {
 export const redis = createRedis();
 
 export const cache = {
+    getNodePeerId,
     setNodePeerId,
     deleteNodePeerId,
     getUserIdByUUID,

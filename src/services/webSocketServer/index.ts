@@ -261,7 +261,10 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 		socket.on("close", async () => {
 			if (client.getSocket() === socket) {
 				this.realm.removeClientById(client.getId());
-				await cache.deleteNodePeerId(client.getNodeId());
+				const nodePeerId = await cache.getNodePeerId(client.getNodeId());
+				if (nodePeerId == client.getId()) {
+					await cache.deleteNodePeerId(client.getNodeId());
+				}
 				this.emit("close", client);
 			}
 		});

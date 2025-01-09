@@ -72,7 +72,10 @@ export class CheckBrokenConnections {
 			} finally {
 				this.realm.clearMessageQueue(clientId);
 				this.realm.removeClientById(clientId);
-				await cache.deleteNodePeerId(client.getNodeId());
+				const nodePeerId = await cache.getNodePeerId(client.getNodeId());
+				if (nodePeerId === clientId) {
+					await cache.deleteNodePeerId(client.getNodeId());
+				}
 				client.setSocket(null);
 
 				this.onClose?.(client);
