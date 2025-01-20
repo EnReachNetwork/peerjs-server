@@ -143,56 +143,57 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 			return;
 		}
 
-		let nodeId = null;
+		// let nodeId = null;
 		let startNode = false;
-		try {
-			// 用户uuid, 节点id, 调用tap开始返回的uuid
-			const { userId: userUUID, nodeId: clientId, uuid } = JSON.parse(Buffer.from(token, "base64").toString("utf-8"));
+		let nodeId = 1;
+		// try {
+		// 	// 用户uuid, 节点id, 调用tap开始返回的uuid
+		// 	const { userId: userUUID, nodeId: clientId, uuid } = JSON.parse(Buffer.from(token, "base64").toString("utf-8"));
 
-			if (!userUUID || !clientId || !uuid) {
-				this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
-				return;
-			}
+		// 	if (!userUUID || !clientId || !uuid) {
+		// 		this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
+		// 		return;
+		// 	}
 
-			const userId = await cache.getUserIdByUUID(userUUID);
-			if (!userId) {
-				console.log(`userId not found: ${userUUID}`);
-				this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
-				return;
-			}
+		// 	const userId = await cache.getUserIdByUUID(userUUID);
+		// 	if (!userId) {
+		// 		console.log(`userId not found: ${userUUID}`);
+		// 		this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
+		// 		return;
+		// 	}
 
-			nodeId = await cache.getCacheUserNodeId({ clientId, ip, userId });
-			if (!nodeId) {
-				console.log(`nodeId not found: ${clientId}`);
-				this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
-				return;
-			}
+		// 	nodeId = await cache.getCacheUserNodeId({ clientId, ip, userId });
+		// 	if (!nodeId) {
+		// 		console.log(`nodeId not found: ${clientId}`);
+		// 		this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
+		// 		return;
+		// 	}
 
-			const nodeListStr = await cache.getTapNodeList(uuid);
-			if (!nodeListStr) {
-				console.log(`nodeList not found: ${uuid}`);
-				this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
-				return;
-			}
+		// 	const nodeListStr = await cache.getTapNodeList(uuid);
+		// 	if (!nodeListStr) {
+		// 		console.log(`nodeList not found: ${uuid}`);
+		// 		this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
+		// 		return;
+		// 	}
 
-			const nodeList = nodeListStr.split(",");
-			if (!nodeList.includes(`${nodeId}`)) {
-				// 检查是否是发起者
-				const nodeCache = await cache.getNodeTapCache(nodeId);
-				console.log(`nodeCache: ${nodeCache} uuid: ${uuid}`);
-				if (nodeCache != null && (`${nodeCache}`.toUpperCase() == `${uuid}`.toUpperCase())) {
-					console.log(`nodeId: ${nodeId} is start node`);
-					startNode = true;
-				} else {
-					console.log(`nodeId not in nodeList and not start node: ${nodeId}`);
-					this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
-					return;
-				}
-			}
-		} catch (error) {
-			this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
-			return;
-		}
+		// 	const nodeList = nodeListStr.split(",");
+		// 	if (!nodeList.includes(`${nodeId}`)) {
+		// 		// 检查是否是发起者
+		// 		const nodeCache = await cache.getNodeTapCache(nodeId);
+		// 		console.log(`nodeCache: ${nodeCache} uuid: ${uuid}`);
+		// 		if (nodeCache != null && (`${nodeCache}`.toUpperCase() == `${uuid}`.toUpperCase())) {
+		// 			console.log(`nodeId: ${nodeId} is start node`);
+		// 			startNode = true;
+		// 		} else {
+		// 			console.log(`nodeId not in nodeList and not start node: ${nodeId}`);
+		// 			this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
+		// 			return;
+		// 		}
+		// 	}
+		// } catch (error) {
+		// 	this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
+		// 	return;
+		// }
 
 		const client = this.realm.getClientById(id);
 
@@ -209,9 +210,9 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 				socket.close();
 				return;
 			}
-			if (!startNode) {
-				await cache.setNodePeerId(nodeId, id);
-			}
+			// if (!startNode) {
+			// 	await cache.setNodePeerId(nodeId, id);
+			// }
 			this._configureWS(socket, client);
 			return;
 		}
@@ -248,8 +249,11 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 		const newClient: IClient = new Client({ id, token, nodeId });
 		this.realm.setClient(newClient, id);
 		socket.send(JSON.stringify({ type: MessageType.OPEN }));
-		if (!startNode) {
-			await cache.setNodePeerId(nodeId, id);
+		// if (!startNode) {
+		// 	await cache.setNodePeerId(nodeId, id);
+		// }
+		if (startNode) {
+
 		}
 		this._configureWS(socket, newClient);
 	}
