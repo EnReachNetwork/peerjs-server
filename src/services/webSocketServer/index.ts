@@ -157,21 +157,21 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 			const userId = await cache.getUserIdByUUID(userUUID);
 			if (!userId) {
 				console.log(`userId not found: ${userUUID}`);
-				this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
+				this._sendErrorAndClose(socket, Errors.INVALID_USERID);
 				return;
 			}
 
 			nodeId = await cache.getCacheUserNodeId({ clientId, ip, userId });
 			if (!nodeId) {
 				console.log(`nodeId not found: ${clientId}`);
-				this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
+				this._sendErrorAndClose(socket, Errors.INVALID_NODE_ID);
 				return;
 			}
 
 			const nodeListStr = await cache.getTapNodeList(uuid);
 			if (!nodeListStr) {
 				console.log(`nodeList not found: ${uuid}`);
-				this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
+				this._sendErrorAndClose(socket, Errors.INVALID_TAP_UUID);
 				return;
 			}
 
@@ -190,7 +190,7 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 				}
 			}
 		} catch (error) {
-			this._sendErrorAndClose(socket, Errors.INVALID_TOKEN);
+			this._sendErrorAndClose(socket, Errors.SERVER_ERROR);
 			return;
 		}
 
